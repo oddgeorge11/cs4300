@@ -1,0 +1,24 @@
+#program to demonstrate different python data types
+
+def main():
+    value_dict = get_task_values()
+    for i, j in value_dict.items():
+        print(f"{i}: {j} ({type(j).__name__})")
+
+
+#function to build the task values to be used
+def get_task_values():
+    int_value = 25
+    float_value = 13.4
+    string_value = "Yo mama!"
+    bool_value = False
+
+    return {
+            "int_value": int_value,
+            "float_value": float_value,
+            "string_value": string_value,
+            "bool_value": bool_value
+            }
+
+if __name__ == '__main__':
+    main()
