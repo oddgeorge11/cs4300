@@ -1,0 +1,6 @@
+homework1Env/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
