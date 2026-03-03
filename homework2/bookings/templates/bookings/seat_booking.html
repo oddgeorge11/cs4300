@@ -1,0 +1,59 @@
+{% extends "bookings/base.html" %}
+{% block title %}Seat Booking{% endblock %}
+
+{% block content %}
+  <div class="mb-3">
+    <a href="{% url 'movie_list' %}" class="btn btn-outline-secondary btn-sm">Back to movies</a>
+  </div>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h3 class="card-title mb-1">{{ movie.title }}</h3>
+      <p class="text-muted mb-0">{{ movie.description }}</p>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12 col-lg-7">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Seats</h5>
+          <p class="text-muted small">Select an available seat to book it.</p>
+
+          {% if seats %}
+            <div class="d-flex flex-wrap gap-2">
+              {% for seat in seats %}
+                {% if seat.is_booked %}
+                  <button class="btn btn-sm btn-secondary" disabled>
+                    {{ seat.seat_number }} (Booked)
+                  </button>
+                {% else %}
+                  <form method="post" action="{% url 'book_seat' movie.id seat.id %}" class="m-0">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-success" type="submit">
+                      {{ seat.seat_number }} (Available)
+                    </button>
+                  </form>
+                {% endif %}
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="alert alert-info mb-0">No seats exist yet.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-5">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Tips</h5>
+          <ul class="mb-0">
+            <li>If you have no seats, create them in admin or seed them via a script.</li>
+            <li>Booking sets the seat to booked and creates a Booking row.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

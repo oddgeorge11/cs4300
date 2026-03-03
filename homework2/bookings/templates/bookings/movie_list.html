@@ -1,0 +1,30 @@
+{% extends "bookings/base.html" %}
+{% block title %}Movies{% endblock %}
+
+{% block content %}
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="m-0">Available Movies</h2>
+  </div>
+
+  {% if movies %}
+    <div class="row g-3">
+      {% for movie in movies %}
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">{{ movie.title }}</h5>
+              <p class="card-text text-muted">{{ movie.description }}</p>
+              <ul class="list-unstyled small mb-3">
+                <li><strong>Release date:</strong> {{ movie.release_date }}</li>
+                <li><strong>Duration:</strong> {{ movie.duration }} minutes</li>
+              </ul>
+              <a class="btn btn-primary" href="{% url 'seat_booking' movie.id %}">Book seats</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info">No movies found yet. Create one via the API or admin.</div>
+  {% endif %}
+{% endblock %}
