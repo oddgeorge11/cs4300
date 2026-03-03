@@ -13,7 +13,7 @@ class Movie(models.Model):
 
 #create the Seat model
 class Seat(models.Model):
-    seat_number = models.CharField(max_length=10, unique=True)
+    seat_number = models.CharField(max_length=50, unique=True)
     is_booked = models.BooleanField(default=False)
 
     def __str__(self):
