@@ -4,41 +4,36 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
 
 from .models import Booking, Movie, Seat
 from .serializers import BookingSerializer, MovieSerializer, SeatSerializer
 
 
+#class to provide CRUD operations for movies through the REST API
 class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
 
 
+#class to provide CRUD operations for seats through the REST API
 class SeatViewSet(viewsets.ModelViewSet):
     queryset = Seat.objects.all()
     serializer_class = SeatSerializer
 
 
+#class to provide CRUD operations for bookings through the REST API
 class BookingViewSet(viewsets.ModelViewSet):
+    queryset = Booking.objects.all()
     serializer_class = BookingSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return Booking.objects.filter(user=self.request.user)
-
-    def perform_destroy(self, instance):
-        seat = instance.seat
-        seat.is_booked = False
-        seat.save()
-        instance.delete()
 
 
+#function to render the main page that shows all movies
 def movie_list_page(request):
     movies = Movie.objects.all().order_by("title")
     return render(request, "bookings/movie_list.html", {"movies": movies})
 
 
+#function to render the seat booking page for a specific movie
 def seat_booking_page(request, movie_id):
     movie = get_object_or_404(Movie, id=movie_id)
     seats = Seat.objects.filter(movie=movie).order_by("seat_number")
@@ -48,6 +43,7 @@ def seat_booking_page(request, movie_id):
     })
 
 
+#function to book a seat when the user clicks the book button
 @login_required
 @require_POST
 def book_seat_action(request, movie_id, seat_id):
@@ -71,6 +67,7 @@ def book_seat_action(request, movie_id, seat_id):
     return redirect("booking_history")
 
 
+#function to cancel a booking and free the seat again
 @login_required
 @require_POST
 def cancel_booking_action(request, booking_id):
@@ -86,6 +83,7 @@ def cancel_booking_action(request, booking_id):
     return redirect("booking_history")
 
 
+#fnuction to show the booking history page for the logged in user
 @login_required
 def booking_history_page(request):
     bookings = (
