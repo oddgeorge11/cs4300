@@ -1,6 +1,8 @@
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import TestCase, Client
 from django.urls import reverse
+
+from behave import given, when, then
 
 from .models import Booking, Movie, Seat
 
@@ -159,4 +161,113 @@ class BookingUnitTests(TestCase):
 
 #START OF INTEGRATION TESTING
 
+class BookingIntegrationTests(APITestCase):
+    #function to set up the starting api test data for movies seats and users
+    def setUp(self):
+        self.alice = User.objects.create_user(
+            username="Alice",
+            password="yomama69"
+        )
+        self.bob = User.objects.create_user(
+            username="Bob",
+            password="yomama69"
+        )
 
+        self.movie = Movie.objects.create(
+            title="Inception",
+            description="Dream movie",
+            release_date="2010-07-16",
+            duration=148,
+        )
+
+        self.seat1 = Seat.objects.create(
+            movie=self.movie,
+            seat_number="B1",
+            is_booked=False,
+        )
+
+        self.seat2 = Seat.objects.create(
+            movie=self.movie,
+            seat_number="B2",
+            is_booked=False,
+        )
+
+    #function to test that the movies api endpoint returns a successful response and movie data
+    def test_movies_api_returns_movie_list(self):
+        response = self.client.get("/api/movies/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["title"], "Inception")
+
+    #function to test that the seats api endpoint returns seat data and booking status
+    def test_seats_api_returns_seat_list(self):
+        response = self.client.get("/api/seats/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertIn("seat_number", response.data[0])
+        self.assertIn("is_booked", response.data[0])
+
+    #function to test that the bookings api endpoint requires login
+    def test_bookings_api_requires_authentication(self):
+        response = self.client.get("/api/bookings/")
+
+        self.assertIn(
+            response.status_code,
+            [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN]
+        )
+
+    #function to test that a logged in user can create a booking through the api
+    def test_create_booking_api_creates_booking(self):
+        self.client.login(username="Alice", password="yomama69")
+
+        response = self.client.post(
+            "/api/bookings/",
+            {
+                "movie": self.movie.id,
+                "seat": self.seat1.id,
+                "user": self.alice.id,
+            },
+            format="json"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Booking.objects.count(), 1)
+
+        booking = Booking.objects.get()
+        self.assertEqual(booking.user, self.alice)
+        self.assertEqual(booking.movie, self.movie)
+        self.assertEqual(booking.seat, self.seat1)
+
+    #function to test that the bookings api shows the logged in users booking history
+    def test_bookings_api_returns_logged_in_users_bookings(self):
+        Booking.objects.create(
+            movie=self.movie,
+            seat=self.seat1,
+            user=self.alice,
+        )
+
+        self.client.login(username="Alice", password="yomama69")
+        response = self.client.get("/api/bookings/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+    #function to test that deleting a booking through the api removes the booking
+    def test_delete_booking_api_removes_booking(self):
+        booking = Booking.objects.create(
+            movie=self.movie,
+            seat=self.seat1,
+            user=self.alice,
+        )
+
+        self.client.login(username="Alice", password="yomama69")
+        response = self.client.delete(f"/api/bookings/{booking.id}/")
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Booking.objects.count(), 0)
+        
+#END OF INTEGRATION  TESTING
+
+#START OF BDD TESTING
