@@ -12,6 +12,7 @@
             <th>Movie</th>
             <th>Seat</th>
             <th>Booked at</th>
+            <th style="width: 1%;">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -20,6 +21,12 @@
               <td>{{ booking.movie.title }}</td>
               <td>{{ booking.seat.seat_number }}</td>
               <td>{{ booking.booking_date }}</td>
+              <td class="text-nowrap">
+                <form method="post" action="{% url 'cancel_booking' booking.id %}" class="d-inline">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+                </form>
+              </td>
             </tr>
           {% endfor %}
         </tbody>

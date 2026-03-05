@@ -9,6 +9,7 @@ from .views import (
     seat_booking_page,
     book_seat_action,
     booking_history_page,
+    cancel_booking_action,
 )
 
 router = DefaultRouter()
@@ -28,6 +29,7 @@ urlpatterns = [
         name="book_seat",
     ),
     path("my-bookings/", booking_history_page, name="booking_history"),
+    path("my-bookings/<int:booking_id>/cancel/", cancel_booking_action, name="cancel_booking"),
 
     # =========================
     # API

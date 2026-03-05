@@ -13,11 +13,19 @@ class Movie(models.Model):
 
 #create the Seat model
 class Seat(models.Model):
-    seat_number = models.CharField(max_length=50, unique=True)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name="seats", null=True, blank=True)
+    seat_number = models.CharField(max_length=10)
     is_booked = models.BooleanField(default=False)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["movie", "seat_number"], name="unique_seat_per_movie")
+        ]
+
     def __str__(self):
-        return self.seat_number
+        if self.movie is None:
+            return self.seat_number
+        return f"{self.movie.title} - {self.seat_number}"
 
 #create the Booking model
 class Booking(models.Model):
