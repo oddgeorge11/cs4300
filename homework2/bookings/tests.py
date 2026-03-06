@@ -1,8 +1,9 @@
 from django.contrib.auth.models import User
-from django.test import TestCase, Client
+from django.test import TestCase
 from django.urls import reverse
 
-from behave import given, when, then
+from rest_framework.test import APITestCase
+from rest_framework import status
 
 from .models import Booking, Movie, Seat
 
@@ -10,7 +11,7 @@ from .models import Booking, Movie, Seat
 class BookingUnitTests(TestCase):
     #function that sets up the starting data that every test will use
     def setUp(self):
-        self.ali = User.objects.create_user(
+        self.alice = User.objects.create_user(
             username="Alice",
             password="yomama69"
         )
@@ -109,7 +110,7 @@ class BookingUnitTests(TestCase):
         self.assertFalse(self.seat1.is_booked)
         self.assertEqual(Booking.objects.count(), 0)
 
-    #function to test that the booking history page only shows the logged in user's bookings
+    #function to test that the booking history page only shows the logged in users bookings
     def test_booking_history_shows_only_logged_in_users_bookings(self):
         Booking.objects.create(
             movie=self.movie,
@@ -135,7 +136,7 @@ class BookingUnitTests(TestCase):
         self.assertContains(response, "A1")
         self.assertNotContains(response, "A2")
 
-    #function to test that one user cannot cancel another user's booking
+    #function to test that one user cannot cancel another users booking
     def test_another_user_cannot_cancel_someone_elses_booking(self):
         booking = Booking.objects.create(
             movie=self.movie,
@@ -157,12 +158,12 @@ class BookingUnitTests(TestCase):
         self.assertTrue(self.seat1.is_booked)
         self.assertEqual(Booking.objects.count(), 1)
 
-#END OF UNIT TESTING
+#END INTEGRATION TESTING
 
-#START OF INTEGRATION TESTING
+#BEGIN INTEGRATION TESTING
 
 class BookingIntegrationTests(APITestCase):
-    #function to set up the starting api test data for movies seats and users
+    #function that sets up the starting api test data for movies seats and users
     def setUp(self):
         self.alice = User.objects.create_user(
             username="Alice",
@@ -227,7 +228,6 @@ class BookingIntegrationTests(APITestCase):
             {
                 "movie": self.movie.id,
                 "seat": self.seat1.id,
-                "user": self.alice.id,
             },
             format="json"
         )
@@ -267,7 +267,3 @@ class BookingIntegrationTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Booking.objects.count(), 0)
-        
-#END OF INTEGRATION  TESTING
-
-#START OF BDD TESTING

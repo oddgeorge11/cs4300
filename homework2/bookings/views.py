@@ -4,6 +4,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import ValidationError
 
 from .models import Booking, Movie, Seat
 from .serializers import BookingSerializer, MovieSerializer, SeatSerializer
@@ -23,8 +25,33 @@ class SeatViewSet(viewsets.ModelViewSet):
 
 #class to provide CRUD operations for bookings through the REST API
 class BookingViewSet(viewsets.ModelViewSet):
-    queryset = Booking.objects.all()
     serializer_class = BookingSerializer
+
+    #function that requires a user to be logged in to use the bookings api
+    permission_classes = [IsAuthenticated]
+
+    #function that returns only the logged in users bookings
+    def get_queryset(self):
+        return Booking.objects.filter(user=self.request.user)
+
+    #function that creates a booking for the logged in user and marks the seat as booked
+    def perform_create(self, serializer):
+        seat = serializer.validated_data["seat"]
+
+        if seat.is_booked:
+            raise ValidationError({"seat": "This seat is already booked."})
+
+        seat.is_booked = True
+        seat.save()
+
+        serializer.save(user=self.request.user)
+
+    #function that frees the seat before deleting the booking
+    def perform_destroy(self, instance):
+        seat = instance.seat
+        seat.is_booked = False
+        seat.save()
+        instance.delete()
 
 
 #function to render the main page that shows all movies
@@ -83,7 +110,7 @@ def cancel_booking_action(request, booking_id):
     return redirect("booking_history")
 
 
-#fnuction to show the booking history page for the logged in user
+#function to show the booking history page for the logged in user
 @login_required
 def booking_history_page(request):
     bookings = (
